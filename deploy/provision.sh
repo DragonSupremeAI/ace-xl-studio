@@ -38,6 +38,10 @@ pip install fastapi uvicorn python-multipart soundfile 2>/dev/null || true
 # binary directly instead of `uv run`.
 uv pip install --python .venv/bin/python \
     torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1
+# flash-attn wheels are built per-torch-ABI; under torch 2.7.1 it is broken
+# but still detectable, which disables nano-vllm enforce_eager and leaves a
+# poisoned CUDA-graph capture state. Remove it so the LM runs eager.
+uv pip uninstall --python .venv/bin/python flash-attn flash_attn || true
 
 # --- 2. Prefetch models (idempotent, resumable via HF cache) ----------------
 export HF_HOME=/workspace/.cache/huggingface
