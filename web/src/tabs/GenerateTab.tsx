@@ -264,7 +264,7 @@ export default function GenerateTab({ models, preset }: Props) {
           />
         </div>
 
-        <button className="primary" onClick={submit} disabled={busy || !prompt}>
+        <button className="primary" onClick={submit} disabled={busy || (!prompt && !lyrics)}>
           {busy ? "submitting…" : "Generate"}
         </button>
         {err && <div className="error">{err}</div>}

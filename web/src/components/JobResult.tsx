@@ -28,7 +28,7 @@ export default function JobResult({ taskId, status, rows, onSnapshot }: Props) {
           {r.file && (
             <audio
               controls
-              src={api.audioUrl(r.file.split("path=")[1] ?? r.file)}
+              src={api.audioUrl(decodeURIComponent(r.file.split("path=")[1] ?? r.file))}
               className="result-audio"
             />
           )}
