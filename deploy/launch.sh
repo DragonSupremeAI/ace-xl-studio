@@ -26,7 +26,9 @@ else
     OFFER_ID="$1"
 fi
 
-PORTAL_CONFIG='localhost:1111:11111:/:Instance Portal|localhost:8080:18080:/:Jupyter|localhost:8384:18384:/:Syncthing|localhost:8001:8001:/:ACE-Step API|localhost:8100:8100:/:Upload Helper'
+# In --ssh launch mode the image entrypoint is replaced and the provisioner
+# never runs; EXTRA_COMMANDS is the boot hook that /.launch executes instead.
+EXTRA_COMMANDS="curl -fsSL $PROVISIONING_URL -o /root/onstart.sh && nohup bash /root/onstart.sh > /var/log/onstart.log 2>&1 &"
 
 vastai create instance "$OFFER_ID" \
     --image "$IMAGE" \
@@ -34,8 +36,7 @@ vastai create instance "$OFFER_ID" \
     --ssh --direct \
     --label acestep-xl-api \
     --env "-p 8001:8001 -p 8100:8100 \
-        -e PORTAL_CONFIG=\"$PORTAL_CONFIG\" \
-        -e PROVISIONING_SCRIPT=$PROVISIONING_URL \
+        -e EXTRA_COMMANDS=\"$EXTRA_COMMANDS\" \
         -e ACESTEP_CONFIG_PATH=${ACESTEP_CONFIG_PATH:-acestep-v15-xl-turbo} \
         -e ACESTEP_LM_MODEL_PATH=${ACESTEP_LM_MODEL_PATH:-acestep-5Hz-lm-1.7B} \
         -e ACESTEP_API_KEY=${ACESTEP_API_KEY:-} \
