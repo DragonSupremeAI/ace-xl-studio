@@ -13,7 +13,7 @@ interface Props {
 export default function GenerateTab({ models, preset }: Props) {
   const [prompt, setPrompt] = useState("");
   const [lyrics, setLyrics] = useState("");
-  const [duration, setDuration] = useState(120);
+  const [duration, setDuration] = useState<number | "">(120);
   const [bpm, setBpm] = useState<number | "">("");
   const [keyScale, setKeyScale] = useState("");
   const [timeSig, setTimeSig] = useState("");
@@ -114,7 +114,7 @@ export default function GenerateTab({ models, preset }: Props) {
         use_format: useFormat,
         vocal_language: language,
         model,
-        audio_duration: duration,
+        audio_duration: duration === "" ? undefined : duration,
         inference_steps: steps,
         guidance_scale: guidance,
         use_random_seed: randomSeed,
@@ -212,8 +212,15 @@ export default function GenerateTab({ models, preset }: Props) {
             </select>
           </label>
           <label>
-            Duration (s)
-            <input type="number" min={10} max={600} value={duration} onChange={(e) => setDuration(+e.target.value)} />
+            Duration (s, blank = auto)
+            <input
+              type="number"
+              min={10}
+              max={600}
+              value={duration}
+              placeholder="auto"
+              onChange={(e) => setDuration(e.target.value === "" ? "" : +e.target.value)}
+            />
           </label>
           <label>
             BPM
