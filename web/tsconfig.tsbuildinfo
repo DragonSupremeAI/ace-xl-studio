@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/types.ts","./src/api/client.ts","./src/components/AudioUpload.tsx","./src/components/JobResult.tsx","./src/components/SettingsBar.tsx","./src/tabs/EditTab.tsx","./src/tabs/GenerateTab.tsx","./src/tabs/LibraryTab.tsx","./src/tabs/TrainTab.tsx"],"version":"5.9.3"}
