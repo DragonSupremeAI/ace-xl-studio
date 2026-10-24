@@ -57,6 +57,7 @@ done
 # --- 3. Service scripts ------------------------------------------------------
 cat > /opt/supervisor-scripts/acestep-api.sh <<'EOS'
 #!/bin/bash
+[ -f /root/prov_env.sh ] && . /root/prov_env.sh
 utils=/opt/supervisor-scripts/utils
 [ -f "${utils}/logging.sh" ] && . "${utils}/logging.sh"
 [ -f "${utils}/environment.sh" ] && . "${utils}/environment.sh"
