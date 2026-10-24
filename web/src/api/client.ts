@@ -1,4 +1,4 @@
-import type { DatasetSample, LibraryEntry, TaskResult, TrainingStatus } from "../types";
+import type { DatasetSample, LibraryEntry, LibraryManifest, TaskResult, TrainingStatus } from "../types";
 
 const API = "/api";
 
@@ -34,9 +34,10 @@ export const api = {
   audioUrl: (serverPath: string) => `${API}/audio?path=${encodeURIComponent(serverPath)}`,
 
   // library
-  snapshot: (taskId: string) => post(`/library/snapshot/${taskId}`, {}),
+  snapshot: (taskId: string, params?: Record<string, unknown>) =>
+    post(`/library/snapshot/${taskId}`, { params: params ?? {} }),
   library: () => req<{ entries: LibraryEntry[] }>("/library/entries"),
-  manifest: (taskId: string) => req<Record<string, unknown>>(`/library/entries/${taskId}/manifest`),
+  manifest: (taskId: string) => req<LibraryManifest>(`/library/entries/${taskId}/manifest`),
   libraryFileUrl: (taskId: string, f: string) =>
     `${API}/library/entries/${taskId}/files/${encodeURIComponent(f)}`,
   deleteEntry: (taskId: string) =>

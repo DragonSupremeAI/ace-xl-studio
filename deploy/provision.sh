@@ -67,7 +67,7 @@ redirect_stderr=true
 EOS
 
 # --- 4. Supervisor: dataset upload helper -----------------------------------
-UPLOAD_SERVER_URL="${UPLOAD_SERVER_URL:-https://raw.githubusercontent.com/PLACEHOLDER_USER/ace-xl-studio/main/deploy/upload_server.py}"
+UPLOAD_SERVER_URL="${UPLOAD_SERVER_URL:-https://raw.githubusercontent.com/DragonSupremeAI/ace-xl-studio/main/deploy/upload_server.py}"
 curl -fsSL "$UPLOAD_SERVER_URL" -o /opt/upload_server.py
 
 cat > /opt/supervisor-scripts/upload-server.sh <<'EOS'

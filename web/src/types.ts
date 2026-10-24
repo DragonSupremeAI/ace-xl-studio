@@ -70,6 +70,30 @@ export interface LibraryEntry {
   files: string[];
 }
 
+export interface LibraryManifest {
+  task_id: string;
+  saved_at: string;
+  params?: Record<string, unknown>;
+  row: { status: number; result: string };
+  files: string[];
+}
+
+export interface TrainingStatus {
+  is_training?: boolean;
+  should_stop?: boolean;
+  current_step?: number;
+  current_epoch?: number;
+  current_loss?: number | null;
+  loss_history?: number[];
+  status?: string;
+  steps_per_second?: number;
+  estimated_time_remaining?: number;
+  error?: string | null;
+  tensorboard_url?: string | null;
+  training_log?: string;
+  [key: string]: unknown;
+}
+
 export interface DatasetSample {
   index: number;
   filename: string;
@@ -84,15 +108,6 @@ export interface DatasetSample {
   language: string;
   is_instrumental: boolean;
   labeled: boolean;
-}
-
-export interface TrainingStatus {
-  running?: boolean;
-  progress?: string;
-  epoch?: number;
-  loss?: number;
-  adapter_type?: string;
-  [key: string]: unknown;
 }
 
 export const TASK_TYPES: { value: TaskType; label: string; needsSrc: boolean; model: string }[] = [

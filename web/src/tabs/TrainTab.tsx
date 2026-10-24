@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { DatasetSample } from "../types";
+import TrainingStatusPanel from "../components/TrainingStatus";
+import type { DatasetSample, TrainingStatus } from "../types";
 
 type Stage = "dataset" | "train" | "adapters";
 
@@ -21,7 +22,7 @@ export default function TrainTab() {
 
   // preprocessing
   const [tensorDir, setTensorDir] = useState("");
-  const [prepStatus, setPrepStatus] = useState<Record<string, unknown> | null>(null);
+  const [prepStatus, setPrepStatus] = useState<{ status?: string; progress?: string } | null>(null);
 
   // training
   const [adapterType, setAdapterType] = useState<"lora" | "lokr">("lora");
@@ -35,7 +36,7 @@ export default function TrainTab() {
   const [shift, setShift] = useState(3.0);
   const [seed, setSeed] = useState(42);
   const [outDir, setOutDir] = useState("./lora_output");
-  const [trainStatus, setTrainStatus] = useState<Record<string, unknown> | null>(null);
+  const [trainStatus, setTrainStatus] = useState<TrainingStatus | null>(null);
 
   // adapters
   const [loraPath, setLoraPath] = useState("");
@@ -98,8 +99,9 @@ export default function TrainTab() {
     clearInterval(pollRef.current);
     pollRef.current = window.setInterval(async () => {
       const s = await api.preprocessStatus();
-      setPrepStatus(s);
-      if ((s as Record<string, { status?: string }>)?.data?.status !== "running") {
+      const task = (s as Record<string, { status?: string; progress?: string }>)?.data ?? s;
+      setPrepStatus(task);
+      if (task?.status !== "running") {
         clearInterval(pollRef.current);
       }
     }, 2000);
@@ -270,7 +272,14 @@ export default function TrainTab() {
               preprocess
             </button>
           </div>
-          {prepStatus && <code className="block">{JSON.stringify(prepStatus, null, 1).slice(0, 600)}</code>}
+          {prepStatus && (
+            <div className="train-status">
+              <span className={prepStatus.status === "running" ? "badge running" : "badge"}>
+                {prepStatus.status ?? "—"}
+              </span>
+              {prepStatus.progress && <div className="dim small">{prepStatus.progress}</div>}
+            </div>
+          )}
         </div>
       )}
 
@@ -308,7 +317,7 @@ export default function TrainTab() {
               refresh status
             </button>
           </div>
-          {trainStatus && <code className="block">{JSON.stringify(trainStatus, null, 1).slice(0, 800)}</code>}
+          <TrainingStatusPanel status={trainStatus} />
         </div>
       )}
 

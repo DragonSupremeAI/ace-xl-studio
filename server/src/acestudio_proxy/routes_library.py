@@ -26,8 +26,12 @@ def _entry_dir(task_id: str) -> Path:
 
 
 @router.post("/snapshot/{task_id}")
-async def snapshot(task_id: str) -> dict:
-    """Fetch task result from the remote API and persist manifest + audio."""
+async def snapshot(task_id: str, body: Optional[Dict[str, Any]] = None) -> dict:
+    """Fetch task result from the remote API and persist manifest + audio.
+
+    The request body may carry ``params`` — the generation settings the UI
+    submitted — so the library can rehydrate the form later.
+    """
     res = await client.post("/query_result", json={"task_id_list": [task_id]})
     rows = res.get("data") or []
     if not rows:
@@ -57,6 +61,7 @@ async def snapshot(task_id: str) -> dict:
     manifest = {
         "task_id": task_id,
         "saved_at": datetime.now(timezone.utc).isoformat(),
+        "params": (body or {}).get("params") or {},
         "row": {**row, "result": json.dumps(results)},
         "files": saved,
     }

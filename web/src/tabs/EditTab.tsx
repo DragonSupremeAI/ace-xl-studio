@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { api } from "../api/client";
 import AudioUpload from "../components/AudioUpload";
 import JobResult from "../components/JobResult";
+import WaveformRegion from "../components/WaveformRegion";
 import { TASK_TYPES } from "../types";
 import type { ResultRow, TaskStatus, TaskType } from "../types";
 
@@ -26,6 +27,7 @@ export default function EditTab({ models }: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const pollRef = useRef<number>();
+  const lastParams = useRef<Record<string, unknown>>({});
 
   const taskMeta = TASK_TYPES.find((t) => t.value === taskType)!;
 
@@ -69,6 +71,7 @@ export default function EditTab({ models }: Props) {
         params.repainting_start = repaintStart;
         params.repainting_end = repaintEnd;
       }
+      lastParams.current = params;
       const res = await api.generate(params, undefined, srcAudio);
       const id = res.data.task_id;
       setTaskId(id);
@@ -111,18 +114,29 @@ export default function EditTab({ models }: Props) {
           }
         />
 
-        {taskType === "repaint" && (
-          <div className="row">
-            <label>
-              start (s)
-              <input type="number" min={0} step={0.1} value={repaintStart} onChange={(e) => setRepaintStart(+e.target.value)} />
-            </label>
-            <label>
-              end (s, -1 = end)
-              <input type="number" step={0.1} value={repaintEnd} onChange={(e) => setRepaintEnd(+e.target.value)} />
-            </label>
-          </div>
-        )}
+        {taskType === "repaint" &&
+          (srcAudio ? (
+            <WaveformRegion
+              file={srcAudio}
+              start={repaintStart}
+              end={repaintEnd}
+              onChange={(s, e) => {
+                setRepaintStart(s);
+                setRepaintEnd(e);
+              }}
+            />
+          ) : (
+            <div className="row">
+              <label>
+                start (s)
+                <input type="number" min={0} step={0.1} value={repaintStart} onChange={(e) => setRepaintStart(+e.target.value)} />
+              </label>
+              <label>
+                end (s, -1 = end)
+                <input type="number" step={0.1} value={repaintEnd} onChange={(e) => setRepaintEnd(+e.target.value)} />
+              </label>
+            </div>
+          ))}
 
         {taskType === "cover" && (
           <label>
@@ -168,7 +182,12 @@ export default function EditTab({ models }: Props) {
         </button>
         {err && <div className="error">{err}</div>}
         {taskId && (
-          <JobResult taskId={taskId} status={status} rows={rows} onSnapshot={() => api.snapshot(taskId).then(() => alert("saved"))} />
+          <JobResult
+            taskId={taskId}
+            status={status}
+            rows={rows}
+            onSnapshot={() => api.snapshot(taskId, lastParams.current).then(() => alert("saved to library"))}
+          />
         )}
       </section>
     </div>

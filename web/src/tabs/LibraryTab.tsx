@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import type { LibraryEntry } from "../types";
+import type { LibraryEntry, LibraryManifest } from "../types";
 
-export default function LibraryTab() {
+interface Props {
+  onLoadSettings: (params: Record<string, unknown>) => void;
+}
+
+export default function LibraryTab({ onLoadSettings }: Props) {
   const [entries, setEntries] = useState<LibraryEntry[]>([]);
   const [err, setErr] = useState("");
 
@@ -10,6 +14,19 @@ export default function LibraryTab() {
   useEffect(() => {
     load();
   }, []);
+
+  const loadSettings = async (taskId: string) => {
+    try {
+      const m = await api.manifest(taskId);
+      if (!m.params || Object.keys(m.params).length === 0) {
+        setErr("this entry has no stored params (saved before params tracking)");
+        return;
+      }
+      onLoadSettings(m.params);
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
 
   return (
     <div className="panel">
@@ -31,7 +48,10 @@ export default function LibraryTab() {
                 {e.seed_value ? ` · seed ${e.seed_value}` : ""}
               </div>
             </div>
-            <button className="link" onClick={() => api.deleteEntry(e.task_id).then(load)}>delete</button>
+            <div className="row">
+              <button className="link" onClick={() => loadSettings(e.task_id)}>load settings →</button>
+              <button className="link" onClick={() => api.deleteEntry(e.task_id).then(load)}>delete</button>
+            </div>
           </div>
           {e.files.map((f) => (
             <div key={f} className="row">

@@ -19,6 +19,12 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("generate");
   const [serverOk, setServerOk] = useState<boolean | null>(null);
   const [models, setModels] = useState<string[]>([]);
+  const [preset, setPreset] = useState<{ params: Record<string, unknown>; nonce: number }>();
+
+  const loadIntoGenerate = (params: Record<string, unknown>) => {
+    setPreset({ params, nonce: Date.now() });
+    setTab("generate");
+  };
 
   useEffect(() => {
     api
@@ -59,10 +65,10 @@ export default function App() {
       <SettingsBar />
 
       <main>
-        {tab === "generate" && <GenerateTab models={models} />}
+        {tab === "generate" && <GenerateTab models={models} preset={preset} />}
         {tab === "edit" && <EditTab models={models} />}
         {tab === "train" && <TrainTab />}
-        {tab === "library" && <LibraryTab />}
+        {tab === "library" && <LibraryTab onLoadSettings={loadIntoGenerate} />}
       </main>
     </div>
   );

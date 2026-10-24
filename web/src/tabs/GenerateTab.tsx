@@ -7,9 +7,10 @@ import type { ResultRow, TaskStatus } from "../types";
 
 interface Props {
   models: string[];
+  preset?: { params: Record<string, unknown>; nonce: number };
 }
 
-export default function GenerateTab({ models }: Props) {
+export default function GenerateTab({ models, preset }: Props) {
   const [prompt, setPrompt] = useState("");
   const [lyrics, setLyrics] = useState("");
   const [duration, setDuration] = useState(120);
@@ -35,8 +36,35 @@ export default function GenerateTab({ models }: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const pollRef = useRef<number>();
+  const lastParams = useRef<Record<string, unknown>>({});
 
   useEffect(() => () => clearInterval(pollRef.current), []);
+
+  useEffect(() => {
+    if (!preset) return;
+    const p = preset.params;
+    if (typeof p.prompt === "string") setPrompt(p.prompt);
+    if (typeof p.lyrics === "string") {
+      setLyrics(p.lyrics);
+      setInstrumental(p.lyrics === "");
+    }
+    if (typeof p.model === "string") setModel(p.model);
+    if (typeof p.vocal_language === "string") setLanguage(p.vocal_language);
+    if (typeof p.audio_duration === "number") setDuration(p.audio_duration);
+    if (typeof p.bpm === "number") setBpm(p.bpm);
+    if (typeof p.key_scale === "string") setKeyScale(p.key_scale);
+    if (typeof p.time_signature === "string") setTimeSig(p.time_signature);
+    if (typeof p.inference_steps === "number") setSteps(p.inference_steps);
+    if (typeof p.guidance_scale === "number") setGuidance(p.guidance_scale);
+    if (typeof p.seed === "number") {
+      setSeed(p.seed);
+      setRandomSeed(false);
+    }
+    if (typeof p.batch_size === "number") setBatch(p.batch_size);
+    if (typeof p.audio_format === "string") setFormat(p.audio_format);
+    if (typeof p.thinking === "boolean") setThinking(p.thinking);
+    if (typeof p.use_format === "boolean") setUseFormat(p.use_format);
+  }, [preset]);
 
   const poll = (id: string) => {
     clearInterval(pollRef.current);
@@ -97,6 +125,7 @@ export default function GenerateTab({ models }: Props) {
       if (bpm !== "") params.bpm = bpm;
       if (keyScale) params.key_scale = keyScale;
       if (timeSig) params.time_signature = timeSig;
+      lastParams.current = params;
       const res = await api.generate(params, refAudio ?? undefined);
       const id = res.data.task_id;
       setTaskId(id);
@@ -244,7 +273,7 @@ export default function GenerateTab({ models }: Props) {
             taskId={taskId}
             status={status}
             rows={rows}
-            onSnapshot={() => api.snapshot(taskId).then(() => alert("saved to library"))}
+            onSnapshot={() => api.snapshot(taskId, lastParams.current).then(() => alert("saved to library"))}
           />
         )}
       </section>

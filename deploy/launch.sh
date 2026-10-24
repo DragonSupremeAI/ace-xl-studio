@@ -14,7 +14,7 @@ set -euo pipefail
 GPU_QUERY="${GPU_QUERY:-gpu_ram>=24 reliability>0.95 verified=true rentable=true direct_port_count>=1 geolocation!=CN}"
 DISK_GB="${DISK_GB:-100}"
 IMAGE="${IMAGE:-vastai/base-image:cuda-12.9.1-auto}"
-PROVISIONING_URL="${PROVISIONING_URL:-https://raw.githubusercontent.com/PLACEHOLDER_USER/ace-xl-studio/main/deploy/provision.sh}"
+PROVISIONING_URL="${PROVISIONING_URL:-https://raw.githubusercontent.com/DragonSupremeAI/ace-xl-studio/main/deploy/provision.sh}"
 
 # Repo-local provisioning script takes priority when it has been pushed public.
 if [ "${1:-}" = "" ]; then
