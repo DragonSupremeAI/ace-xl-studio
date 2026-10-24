@@ -193,7 +193,20 @@ export default function GenerateTab({ models, preset }: Props) {
         <div className="field-grid">
           <label>
             Model
-            <select value={model} onChange={(e) => setModel(e.target.value)}>
+            <select
+              value={model}
+              onChange={(e) => {
+                const m = e.target.value;
+                setModel(m);
+                if (m.endsWith("-turbo")) {
+                  setSteps(8);
+                  setGuidance(1.0);
+                } else {
+                  setSteps(50);
+                  setGuidance(7.0);
+                }
+              }}
+            >
               {(models.length ? models : ["acestep-v15-xl-turbo", "acestep-v15-xl-sft", "acestep-v15-xl-base"]).map(
                 (m) => (
                   <option key={m} value={m}>
