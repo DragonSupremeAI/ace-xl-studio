@@ -42,12 +42,12 @@ print('downloaded $M')
 " || echo "WARN: model fetch failed for $M (will retry at first request)"
 done
 
-# --- 3. Supervisor: ACE-Step API server -------------------------------------
+# --- 3. Service scripts ------------------------------------------------------
 cat > /opt/supervisor-scripts/acestep-api.sh <<'EOS'
 #!/bin/bash
 utils=/opt/supervisor-scripts/utils
-. "${utils}/logging.sh"
-. "${utils}/environment.sh"
+[ -f "${utils}/logging.sh" ] && . "${utils}/logging.sh"
+[ -f "${utils}/environment.sh" ] && . "${utils}/environment.sh"
 . /venv/main/bin/activate
 export HF_HOME=/workspace/.cache/huggingface
 cd /workspace/ACE-Step-1.5
@@ -55,18 +55,6 @@ exec uv run acestep-api --port 8001
 EOS
 chmod +x /opt/supervisor-scripts/acestep-api.sh
 
-cat > /etc/supervisor/conf.d/acestep-api.conf <<'EOS'
-[program:acestep-api]
-environment=PROC_NAME="%(program_name)s"
-command=/opt/supervisor-scripts/acestep-api.sh
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-redirect_stderr=true
-EOS
-
-# --- 4. Supervisor: dataset upload helper -----------------------------------
 UPLOAD_SERVER_URL="${UPLOAD_SERVER_URL:-https://raw.githubusercontent.com/DragonSupremeAI/ace-xl-studio/main/deploy/upload_server.py}"
 curl -fsSL "$UPLOAD_SERVER_URL" -o /opt/upload_server.py
 
@@ -77,7 +65,21 @@ exec python /opt/upload_server.py
 EOS
 chmod +x /opt/supervisor-scripts/upload-server.sh
 
-cat > /etc/supervisor/conf.d/upload-server.conf <<'EOS'
+# --- 4. Register with Supervisor, or launch directly -------------------------
+# NOTE: --ssh launch mode replaces the image entrypoint, so supervisord may
+# not be running. Fall back to plain nohup daemons in that case.
+if supervisorctl status >/dev/null 2>&1; then
+    cat > /etc/supervisor/conf.d/acestep-api.conf <<'EOS'
+[program:acestep-api]
+environment=PROC_NAME="%(program_name)s"
+command=/opt/supervisor-scripts/acestep-api.sh
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+redirect_stderr=true
+EOS
+    cat > /etc/supervisor/conf.d/upload-server.conf <<'EOS'
 [program:upload-server]
 environment=PROC_NAME="%(program_name)s"
 command=/opt/supervisor-scripts/upload-server.sh
@@ -87,6 +89,11 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 redirect_stderr=true
 EOS
-
-supervisorctl reread && supervisorctl update
+    supervisorctl reread && supervisorctl update
+else
+    mkdir -p /var/log/ace-xl-studio
+    nohup /opt/supervisor-scripts/acestep-api.sh > /var/log/ace-xl-studio/api.log 2>&1 &
+    nohup /opt/supervisor-scripts/upload-server.sh > /var/log/ace-xl-studio/upload.log 2>&1 &
+    echo "supervisord not running — services launched directly (logs in /var/log/ace-xl-studio/)"
+fi
 echo "ACE-Step provisioning complete. API on :8001, upload helper on :8100."
