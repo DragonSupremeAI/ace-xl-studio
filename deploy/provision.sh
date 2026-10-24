@@ -31,6 +31,14 @@ else
 fi
 pip install fastapi uvicorn python-multipart soundfile 2>/dev/null || true
 
+# torch 2.10.0+cu128 (repo's linux pin) breaks fp16/bf16 cuBLAS on older
+# drivers (e.g. 570.x: CUBLAS_STATUS_INVALID_VALUE on 16-bit GEMMs).
+# Downgrade to the Windows pin series, verified working on RTX 4090/570.144.
+# uv run would re-sync and revert this, so the service script runs the venv
+# binary directly instead of `uv run`.
+uv pip install --python .venv/bin/python \
+    torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1
+
 # --- 2. Prefetch models (idempotent, resumable via HF cache) ----------------
 export HF_HOME=/workspace/.cache/huggingface
 cd "$APP_DIR"
@@ -51,7 +59,7 @@ utils=/opt/supervisor-scripts/utils
 . /venv/main/bin/activate
 export HF_HOME=/workspace/.cache/huggingface
 cd /workspace/ACE-Step-1.5
-exec uv run acestep-api --port 8001
+exec .venv/bin/acestep-api --port 8001
 EOS
 chmod +x /opt/supervisor-scripts/acestep-api.sh
 
