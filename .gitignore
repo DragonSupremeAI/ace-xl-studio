@@ -7,3 +7,4 @@ __pycache__/
 data/
 vastai_outputs_*/
 *.log
+*.tsbuildinfo
